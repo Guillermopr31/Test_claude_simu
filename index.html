@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulador de Función Lineal</title>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .title {
+            text-align: center;
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .equation {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f7ff;
+            border-radius: 5px;
+        }
+        .canvas-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .info-box {
+            background-color: #fff9e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Función Lineal en el Plano Cartesiano</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Pendiente (m) = <span id="pendienteValue">1</span></label>
+                <input type="range" id="pendiente" min="-5" max="5" step="0.5" value="1">
+            </div>
+            
+            <div class="control-group">
+                <label>Intercepto (b) = <span id="interceptoValue">0</span></label>
+                <input type="range" id="intercepto" min="-10" max="10" step="1" value="0">
+            </div>
+            
+            <div class="control-group">
+                <label>Dominio Mínimo = <span id="dominioMinValue">-10</span></label>
+                <input type="range" id="dominioMin" min="-20" max="0" value="-10">
+            </div>
+            
+            <div class="control-group">
+                <label>Dominio Máximo = <span id="dominioMaxValue">10</span></label>
+                <input type="range" id="dominioMax" min="0" max="20" value="10">
+            </div>
+        </div>
+
+        <div class="equation" id="ecuacion">
+            f(x) = 1x + 0
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="grafica"></canvas>
+        </div>
+
+        <div class="info-box">
+            <strong>Observaciones:</strong>
+            <ul id="observaciones">
+                <li>El punto (0, 0) es donde la línea cruza el eje Y</li>
+                <li>La pendiente 1 indica que por cada unidad que aumenta x, y aumenta 1 unidad</li>
+                <li>Las líneas en 0 representan los ejes X y Y del plano cartesiano</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+        const ctx = document.getElementById('grafica').getContext('2d');
+
+        function actualizarGrafica() {
+            const pendiente = parseFloat(document.getElementById('pendiente').value);
+            const intercepto = parseFloat(document.getElementById('intercepto').value);
+            const dominioMin = parseFloat(document.getElementById('dominioMin').value);
+            const dominioMax = parseFloat(document.getElementById('dominioMax').value);
+
+            // Actualizar valores mostrados
+            document.getElementById('pendienteValue').textContent = pendiente;
+            document.getElementById('interceptoValue').textContent = intercepto;
+            document.getElementById('dominioMinValue').textContent = dominioMin;
+            document.getElementById('dominioMaxValue').textContent = dominioMax;
+
+            // Actualizar ecuación
+            document.getElementById('ecuacion').textContent = 
+                `f(x) = ${pendiente}x ${intercepto >= 0 ? '+' : ''} ${intercepto}`;
+
+            // Generar puntos
+            const puntos = [];
+            for (let x = dominioMin; x <= dominioMax; x++) {
+                puntos.push({
+                    x: x,
+                    y: pendiente * x + intercepto
+                });
+            }
+
+            // Actualizar observaciones
+            const observaciones = document.getElementById('observaciones');
+            observaciones.innerHTML = `
+                <li>El punto (0, ${intercepto}) es donde la línea cruza el eje Y</li>
+                <li>La pendiente ${pendiente} indica que por cada unidad que aumenta x, 
+                    y ${pendiente > 0 ? 'aumenta' : 'disminuye'} ${Math.abs(pendiente)} unidades</li>
+                <li>Las líneas en 0 representan los ejes X y Y del plano cartesiano</li>
+            `;
+
+            // Crear o actualizar gráfica
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'f(x)',
+                        data: puntos,
+                        borderColor: '#2563eb',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'center',
+                            min: dominioMin,
+                            max: dominioMax,
+                            grid: {
+                                color: '#ddd'
+                            },
+                            title: {
+                                display: true,
+                                text: 'X'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'center',
+                            grid: {
+                                color: '#ddd'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Y'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `(${context.parsed.x.toFixed(1)}, ${context.parsed.y.toFixed(1)})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Agregar event listeners
+        document.getElementById('pendiente').addEventListener('input', actualizarGrafica);
+        document.getElementById('intercepto').addEventListener('input', actualizarGrafica);
+        document.getElementById('dominioMin').addEventListener('input', actualizarGrafica);
+        document.getElementById('dominioMax').addEventListener('input', actualizarGrafica);
+
+        // Inicializar gráfica
+        actualizarGrafica();
+    </script>
+</body>
+</html>
